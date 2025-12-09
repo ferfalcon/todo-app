@@ -8,7 +8,7 @@ import {
   taskCreateBodySchema,
 } from '../schemas/taskSchemas';
 
-const swaggerPlugin: FastifyPluginAsync = fp(async (fastify) => {
+const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
   await fastify.register(swagger, {
     openapi: {
       info: {
@@ -45,6 +45,6 @@ const swaggerPlugin: FastifyPluginAsync = fp(async (fastify) => {
       deepLinking: false,
     },
   });
-});
+};
 
-export default swaggerPlugin;
+export default fp(swaggerPlugin);
