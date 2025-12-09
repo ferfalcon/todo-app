@@ -52,6 +52,15 @@ export const listTasksRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Tasks'],
     summary: 'List all tasks for the current user',
+    querystring: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: ['all', 'active', 'completed'],
+        },
+      },
+    },
     response: {
       200: { $ref: 'TaskListResponse#' },
     },

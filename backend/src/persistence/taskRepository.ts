@@ -1,5 +1,5 @@
 import { prisma } from '../db/client';
-import type { Task, UserId } from '../domain/models';
+import type { Task, TaskStatus, UserId } from '../domain/models';
 import type { Task as TaskRecord } from '../generated/prisma/client';
 
 function mapTask(record: TaskRecord): Task {
@@ -15,9 +15,12 @@ function mapTask(record: TaskRecord): Task {
 }
 
 export const tasksRepository = {
-  async findAllByUser(userId: UserId): Promise<Task[]> {
+  async findAllByUser(userId: UserId, status?: TaskStatus): Promise<Task[]> {
     const records = await prisma.task.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        ...(status ? { status } : {}),
+      },
       orderBy: { order: 'asc'},
     });
 

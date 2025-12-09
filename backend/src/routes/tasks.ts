@@ -1,11 +1,8 @@
 import { FastifyPluginAsync } from "fastify";
-import { tasksRepository } from "../persistence/taskRepository";
 import { prisma } from "../db/client";
+import { tasksRepository } from "../persistence/taskRepository";
 import type { UserId } from "../domain/models";
-import {
-  listTasksRouteOptions,
-  createTaskRouteOptions,
-} from '../schemas/taskSchemas';
+import { listTasksRouteOptions, createTaskRouteOptions } from '../schemas/taskSchemas';
 
 const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
   async function ensureDemoUser(): Promise<UserId> {
@@ -25,7 +22,14 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
 
   fastify.get('/tasks', listTasksRouteOptions, async (request, reply) => {
     const userId = await ensureDemoUser();
-    const tasks = await tasksRepository.findAllByUser(userId);
+
+    const { status } = request.query as {
+      status?: 'all' | 'active' | 'completed';
+    };
+
+    const filterStatus = status === 'active' || status === 'completed' ? status : undefined;
+    
+    const tasks = await tasksRepository.findAllByUser(userId, filterStatus);
 
     return { items: tasks };
   });
