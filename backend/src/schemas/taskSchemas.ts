@@ -1,5 +1,4 @@
 import type { RouteShorthandOptions } from 'fastify';
-import { title } from 'process';
 
 // JSON Schema for a single Task on the wire
 export const taskSchema = {
@@ -107,6 +106,33 @@ export const updateTaskRouteOptions: RouteShorthandOptions = {
     body: { $ref: 'TaskUpdateBody#' },
     response: {
       200: { $ref: 'Task#' },
+      404: {
+        type: 'object',
+        properties: {
+          error: { type: 'string' },
+        },
+        required: ['error'],
+      },
+    },
+  },
+};
+
+export const deleteTaskRouteOptions: RouteShorthandOptions = {
+  schema: {
+    tags: ['Tasks'],
+    summary: 'Delete a task',
+    params: {
+      type: 'object',
+      properties: {
+        taskId: { type: 'string' },
+      },
+      required: ['taskId'],
+    },
+    response: {
+      204: {
+        description: 'Task deleted successfully',
+        type: 'null',
+      },
       404: {
         type: 'object',
         properties: {

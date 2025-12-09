@@ -79,5 +79,13 @@ export const tasksRepository = {
     });
 
     return mapTask(updated);
-  }
+  },
+
+  async deleteForUser(userId: UserId, taskId: TaskId): Promise<boolean> {
+    const result = await prisma.task.deleteMany({
+      where: { id: taskId, userId },
+    });
+
+    return result.count > 0;
+  },
 };

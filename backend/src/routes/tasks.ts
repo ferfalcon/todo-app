@@ -2,7 +2,12 @@ import { FastifyPluginAsync } from "fastify";
 import { prisma } from "../db/client";
 import { tasksRepository } from "../persistence/taskRepository";
 import type { UserId } from "../domain/models";
-import { listTasksRouteOptions, createTaskRouteOptions, updateTaskRouteOptions } from '../schemas/taskSchemas';
+import { 
+  listTasksRouteOptions, 
+  createTaskRouteOptions, 
+  updateTaskRouteOptions,
+  deleteTaskRouteOptions
+} from '../schemas/taskSchemas';
 
 const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
   async function ensureDemoUser(): Promise<UserId> {
@@ -18,7 +23,7 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
     });
 
     return user.id as UserId;
-  }
+  };
 
   fastify.get('/tasks', listTasksRouteOptions, async (request, reply) => {
     const userId = await ensureDemoUser();
@@ -53,41 +58,54 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
   });
 
   fastify.patch('/tasks/:taskId', updateTaskRouteOptions, async (request, reply) => {
-      const userId = await ensureDemoUser();
+    const userId = await ensureDemoUser();
 
-      const { taskId } = request.params as { taskId: string };
+    const { taskId } = request.params as { taskId: string };
 
-      const body = request.body as {
-        title?: string;
-        status?: 'active' | 'completed';
-      };
+    const body = request.body as {
+      title?: string;
+      status?: 'active' | 'completed';
+    };
 
-      const changes: {
-        title?: string;
-        status?: 'active' | 'completed';
-      } = {};
+    const changes: {
+      title?: string;
+      status?: 'active' | 'completed';
+    } = {};
 
-      if (typeof body.title === 'string') {
-        changes.title = body.title.trim();
-      }
-      if (body.status) {
-        changes.status = body.status;
-      }
+    if (typeof body.title === 'string') {
+      changes.title = body.title.trim();
+    }
+    if (body.status) {
+      changes.status = body.status;
+    }
 
-      const updated = await tasksRepository.updateForUser(
-        userId,
-        taskId,
-        changes,
-      );
+    const updated = await tasksRepository.updateForUser(
+      userId,
+      taskId,
+      changes,
+    );
 
-      if (!updated) {
-        reply.code(404);
-        return { error: 'Task not found' };
-      }
+    if (!updated) {
+      reply.code(404);
+      return { error: 'Task not found' };
+    }
 
-      return updated;
-    },
-  );
+    return updated;
+  });
+
+  fastify.delete('/task/:taskId', deleteTaskRouteOptions, async(request, reply) => {
+    const userId = await ensureDemoUser();
+    const { taskId } = request.params as { taskId: string };
+
+    const deleted = await tasksRepository.deleteForUser(userId, taskId);
+
+    if (!deleted) {
+      reply.code(404);
+      return { error: 'Task not found'};
+    }
+
+    reply.code(204).send();
+  });
 };
 
-export default tasksRoutes
+export default tasksRoutes;
