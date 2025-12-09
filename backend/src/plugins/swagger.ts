@@ -2,6 +2,11 @@ import { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
 import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
+import {
+  taskSchema,
+  taskListResponseSchema,
+  taskCreateBodySchema,
+} from '../schemas/taskSchemas';
 
 const swaggerPlugin: FastifyPluginAsync = fp(async (fastify) => {
   await fastify.register(swagger, {
@@ -22,12 +27,16 @@ const swaggerPlugin: FastifyPluginAsync = fp(async (fastify) => {
       },
       servers: [
         {
-          url: 'http://localhost:3000',
+          url: 'http://127.0.0.1:3000',
           description: 'Local dev',
         },
       ],
     },
   });
+
+  fastify.addSchema(taskSchema);
+  fastify.addSchema(taskListResponseSchema);
+  fastify.addSchema(taskCreateBodySchema);
 
   await fastify.register(swaggerUI, {
     routePrefix: '/docs',
