@@ -24,14 +24,11 @@ This is an extended solution to the [Todo app challenge on Frontend Mentor](http
 **Create a production-ready todo application**
 
 Users should be able to:
-- View the optimal layout for the app depending on their device's screen size
-- See hover states for all interactive elements on the page
 - Add new todos to the list
 - Mark todos as complete
 - Delete todos from the list
 - Filter by all/active/complete todos
 - Clear all completed todos
-- Toggle light and dark mode
 - **Bonus**: Drag and drop to reorder items on the list
 
 ### Links
@@ -43,36 +40,69 @@ Users should be able to:
 
 ### Built with
 
+#### Backend
+- **Runtime:** [Node.js](https://nodejs.org/) (LTS, 22.20.0)
+  - **Language:** [TypeScript](https://www.typescriptlang.org/)
+  - **Framework:** [Fastify](https://fastify.dev/)
+  - **API style:** REST, JSON
+  - **DB:** [SQLite](https://sqlite.org/) in development, [PostgreSQL](https://www.postgresql.org/) in production
+  - **ORM/DB layer:** [Prisma](https://www.prisma.io/)
+
+#### Frontend
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Build tooling:** [Vite](https://vite.dev/)
+- **Library:** [React](https://reactjs.org/)
 - Semantic HTML5 markup
 - CSS custom properties
 - Flexbox
 - CSS Grid
 - Mobile-first workflow
-- [React](https://reactjs.org/) - JS library
-- [Next.js](https://nextjs.org/) - React framework
-- [Styled Components](https://styled-components.com/) - For styles
 
 ### What I learned
 
-Use this section to recap over some of your major learnings while working through this project. Writing these out and providing code samples of areas you want to highlight is a great way to reinforce your own knowledge.
+If you bootstrap your Fastify app with Fastify-CLI, you get this for free!.
+Plugins and routes are autoloaded.
 
-To see how you can add code snippets, see below:
+```ts
+import { join } from 'node:path'
+import AutoLoad, { AutoloadPluginOptions } from '@fastify/autoload'
+import { FastifyPluginAsync, FastifyServerOptions } from 'fastify'
 
-```html
-<h1>Some HTML code I'm proud of</h1>
-```
-```css
-.proud-of-this-css {
-  color: papayawhip;
+export interface AppOptions extends FastifyServerOptions, Partial<AutoloadPluginOptions> {
 }
-```
-```js
-const proudOfThisFunc = () => {
-  console.log('🎉')
+// Pass --options via CLI arguments in command to enable these options.
+const options: AppOptions = {
 }
-```
 
-If you want more help with writing markdown, we'd recommend checking out [The Markdown Guide](https://www.markdownguide.org/) to learn more.
+const app: FastifyPluginAsync<AppOptions> = async (
+  fastify,
+  opts
+): Promise<void> => {
+  // Place here your custom code!
+
+  // Do not touch the following lines
+
+  // This loads all plugins defined in plugins
+  // those should be support plugins that are reused
+  // through your application
+  // eslint-disable-next-line no-void
+  void fastify.register(AutoLoad, {
+    dir: join(__dirname, 'plugins'),
+    options: opts
+  })
+
+  // This loads all plugins defined in routes
+  // define your routes in one of these
+  // eslint-disable-next-line no-void
+  void fastify.register(AutoLoad, {
+    dir: join(__dirname, 'routes'),
+    options: opts
+  })
+}
+
+export default app
+export { app, options }
+```
 
 ### Continued development
 
