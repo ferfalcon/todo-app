@@ -1,5 +1,5 @@
 import { prisma } from '../db/client';
-import type { Task, TaskStatus, UserId } from '../domain/models';
+import type { Task, TaskStatus, TaskId, UserId } from '../domain/models';
 import type { Task as TaskRecord } from '../generated/prisma/client';
 
 function mapTask(record: TaskRecord): Task {
@@ -46,4 +46,38 @@ export const tasksRepository = {
 
     return mapTask(record);
   },
+
+  async updateForUser(
+    userId: UserId,
+    taskId: TaskId,
+    changes: Partial<Pick<Task, 'title' | 'status'>>,
+  ): Promise<Task | null> {
+    const data: { title?: string; status? : TaskStatus} = {};
+
+    if (typeof changes.title === 'string') {
+      data.title = changes.title;
+    }
+    if (typeof changes.status === 'string') {
+      data.status = changes.status;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return null;
+    }
+
+    const existing = await prisma.task.findFirst({
+      where: { id: taskId, userId},
+    });
+
+    if (!existing) {
+      return null;
+    }
+
+    const updated = await prisma.task.update({
+      where: { id: existing.id },
+      data,
+    });
+
+    return mapTask(updated);
+  }
 };

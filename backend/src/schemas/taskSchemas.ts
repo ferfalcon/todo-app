@@ -1,4 +1,5 @@
 import type { RouteShorthandOptions } from 'fastify';
+import { title } from 'process';
 
 // JSON Schema for a single Task on the wire
 export const taskSchema = {
@@ -77,6 +78,42 @@ export const createTaskRouteOptions: RouteShorthandOptions = {
       201: { $ref: 'Task#' },
       // We *do* return 400 in the handler for bad titles, but we keep
       // docs simple for now and only describe the happy-path 201.
+    },
+  },
+};
+
+export const taskUpdateBodySchema = {
+  $id: 'TaskUpdateBody',
+  type: 'object',
+  properties: {
+    title: { type: 'string', minLength: 1 },
+    status: { type: 'string', enum: ['active', 'completed'] },
+  },
+  additionalProperties: false,
+  minProperties: 1,
+} as const;
+
+export const updateTaskRouteOptions: RouteShorthandOptions = {
+  schema: {
+    tags: ['Tasks'],
+    summary: 'Update a task (rename and/or change status)',
+    params: {
+      type: 'object',
+      properties: {
+        taskId: { type: 'string' },
+      },
+      required: ['taskId'],
+    },
+    body: { $ref: 'TaskUpdateBody#' },
+    response: {
+      200: { $ref: 'Task#' },
+      404: {
+        type: 'object',
+        properties: {
+          error: { type: 'string' },
+        },
+        required: ['error'],
+      },
     },
   },
 };
