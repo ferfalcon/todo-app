@@ -7,6 +7,7 @@ import {
   taskListResponseSchema,
   taskCreateBodySchema,
   taskUpdateBodySchema,
+  taskReorderBodySchema
 } from '../schemas/taskSchemas';
 
 const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
@@ -39,6 +40,7 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.addSchema(taskListResponseSchema);
   fastify.addSchema(taskCreateBodySchema);
   fastify.addSchema(taskUpdateBodySchema);
+  fastify.addSchema(taskReorderBodySchema);
 
   await fastify.register(swaggerUI, {
     routePrefix: '/docs',

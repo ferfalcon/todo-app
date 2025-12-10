@@ -95,4 +95,41 @@ export const tasksRepository = {
 
     return result.count;
   },
+
+  async reorderForUser(userId: UserId, orderedIds: TaskId[]): Promise<Task[] | null> {
+    const tasks = await prisma.task.findMany({
+      where: { userId },
+      orderBy: { order: 'asc' },
+    });
+
+    if (tasks.length !== orderedIds.length) {
+      return null;
+    }
+
+    const existingIds = new Set(tasks.map((task) => task.id));
+    const seen = new Set<string>();
+
+    for (const id of orderedIds) {
+      if (!existingIds.has(id)) {
+        return null;
+      }
+
+      if (seen.has(id)) {
+        return null;
+      }
+
+      seen.add(id);
+    }
+
+    const updates = orderedIds.map((id, index) => 
+      prisma.task.update({ 
+        where: { id },
+        data: { order: index },
+      })
+    );
+
+    const updatedRecords = await prisma.$transaction(updates);
+
+    return updatedRecords.map(mapTask);
+  },
 };

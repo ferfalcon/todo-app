@@ -58,6 +58,20 @@ export const taskListResponseSchema = {
   required: ['items'],
 } as const;
 
+export const taskReorderBodySchema = {
+  $id: 'TaskReorderBody',
+  type: 'object',
+  properties: {
+    orderedIds: {
+      type: 'array',
+      items: { type: 'string' },
+      minItems: 0,
+    },
+  },
+  required: ['orderedIds'],
+  additionalProperties: false,
+} as const;
+
 // Route options for GET /tasks
 export const listTasksRouteOptions: RouteShorthandOptions = {
   schema: {
@@ -156,6 +170,26 @@ export const deleteCompleteRouteOptions: RouteShorthandOptions = {
           deleted: { type: 'integer', minimum: 0 },
         },
         required: ['deleted'],
+      },
+    },
+  },
+};
+
+export const reorderTasksRouteOptions: RouteShorthandOptions = {
+  schema: {
+    tags: ['Tasks'],
+    summary: 'Reorder all tasks for the current user',
+    description:
+      'orderedIds must contain each of the current user’s task IDs exactly once.',
+    body: { $ref: 'TaskReorderBody#' },
+    response: {
+      200: { $ref: 'TaskListResponse#' },
+      400: {
+        type: 'object',
+        properties: {
+          error: { type: 'string' },
+        },
+        required: ['error'],
       },
     },
   },

@@ -7,7 +7,8 @@ import {
   createTaskRouteOptions, 
   updateTaskRouteOptions,
   deleteTaskRouteOptions,
-  deleteCompleteRouteOptions
+  deleteCompleteRouteOptions,
+  reorderTasksRouteOptions
 } from '../schemas/taskSchemas';
 
 const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
@@ -114,6 +115,23 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
     const deleteCount = await tasksRepository.clearCompleteForUser(userId);
 
     return { deleted: deleteCount }
+  });
+
+  fastify.post('/task/reorder', reorderTasksRouteOptions, async (request, reply) => {
+    const userId = await ensureDemoUser();
+
+    const { orderedIds } = request.body as { 
+      orderedIds: string[];
+    };
+
+    const reordered = await tasksRepository.reorderForUser(userId, orderedIds);
+
+    if (!reordered) {
+      reply.code(400);
+      return { error: 'Invalid orderedIds. They must contain each of the current user’s task IDs exactly once.' };
+    }
+
+    return { items: reordered };
   });
 };
 
