@@ -47,11 +47,7 @@ export const tasksRepository = {
     return mapTask(record);
   },
 
-  async updateForUser(
-    userId: UserId,
-    taskId: TaskId,
-    changes: Partial<Pick<Task, 'title' | 'status'>>,
-  ): Promise<Task | null> {
+  async updateForUser(userId: UserId, taskId: TaskId, changes: Partial<Pick<Task, 'title' | 'status'>>): Promise<Task | null> {
     const data: { title?: string; status? : TaskStatus} = {};
 
     if (typeof changes.title === 'string') {
@@ -87,5 +83,16 @@ export const tasksRepository = {
     });
 
     return result.count > 0;
+  },
+
+  async clearCompleteForUser(userId: UserId): Promise<number> {
+    const result = await prisma.task.deleteMany({
+      where: {
+        userId,
+        status: 'completed',
+      },
+    });
+
+    return result.count;
   },
 };

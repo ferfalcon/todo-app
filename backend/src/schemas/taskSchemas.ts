@@ -24,6 +24,27 @@ export const taskSchema = {
   ],
 } as const;
 
+// JSON Schema for POST /tasks body
+export const taskCreateBodySchema = {
+  $id: 'TaskCreateBody',
+  type: 'object',
+  properties: {
+    title: { type: 'string', minLength: 1 },
+  },
+  required: ['title'],
+} as const;
+
+export const taskUpdateBodySchema = {
+  $id: 'TaskUpdateBody',
+  type: 'object',
+  properties: {
+    title: { type: 'string', minLength: 1 },
+    status: { type: 'string', enum: ['active', 'completed'] },
+  },
+  additionalProperties: false,
+  minProperties: 1,
+} as const;
+
 // JSON Schema for { items: Task[] }
 export const taskListResponseSchema = {
   $id: 'TaskListResponse',
@@ -35,16 +56,6 @@ export const taskListResponseSchema = {
     },
   },
   required: ['items'],
-} as const;
-
-// JSON Schema for POST /tasks body
-export const taskCreateBodySchema = {
-  $id: 'TaskCreateBody',
-  type: 'object',
-  properties: {
-    title: { type: 'string', minLength: 1 },
-  },
-  required: ['title'],
 } as const;
 
 // Route options for GET /tasks
@@ -80,17 +91,6 @@ export const createTaskRouteOptions: RouteShorthandOptions = {
     },
   },
 };
-
-export const taskUpdateBodySchema = {
-  $id: 'TaskUpdateBody',
-  type: 'object',
-  properties: {
-    title: { type: 'string', minLength: 1 },
-    status: { type: 'string', enum: ['active', 'completed'] },
-  },
-  additionalProperties: false,
-  minProperties: 1,
-} as const;
 
 export const updateTaskRouteOptions: RouteShorthandOptions = {
   schema: {
@@ -139,6 +139,23 @@ export const deleteTaskRouteOptions: RouteShorthandOptions = {
           error: { type: 'string' },
         },
         required: ['error'],
+      },
+    },
+  },
+};
+
+export const deleteCompleteRouteOptions: RouteShorthandOptions = {
+  schema: {
+    tags: ['Tasks'],
+    summary: 'Delete all completed tasks for the current user',
+    response: {
+      200: {
+        description: 'Number of completed tasks that were deleted',
+        type: 'object',
+        properties: {
+          deleted: { type: 'integer', minimum: 0 },
+        },
+        required: ['deleted'],
       },
     },
   },

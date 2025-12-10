@@ -6,7 +6,8 @@ import {
   listTasksRouteOptions, 
   createTaskRouteOptions, 
   updateTaskRouteOptions,
-  deleteTaskRouteOptions
+  deleteTaskRouteOptions,
+  deleteCompleteRouteOptions
 } from '../schemas/taskSchemas';
 
 const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
@@ -105,6 +106,14 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
     }
 
     reply.code(204).send();
+  });
+
+  fastify.delete('/task/completed', deleteCompleteRouteOptions, async (request, reply) => {
+    const userId = await ensureDemoUser();
+
+    const deleteCount = await tasksRepository.clearCompleteForUser(userId);
+
+    return { deleted: deleteCount }
   });
 };
 
