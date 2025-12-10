@@ -10,6 +10,13 @@ import {
   taskReorderBodySchema
 } from '../schemas/taskSchemas';
 
+import {
+  userSchema,
+  authSignupBodySchema,
+  authLoginBodySchema,
+  authUserWithTokenSchema,
+} from '../schemas/authSchemas';
+
 const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
   await fastify.register(swagger, {
     openapi: {
@@ -41,6 +48,11 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.addSchema(taskCreateBodySchema);
   fastify.addSchema(taskUpdateBodySchema);
   fastify.addSchema(taskReorderBodySchema);
+
+  fastify.addSchema(userSchema);
+  fastify.addSchema(authSignupBodySchema);
+  fastify.addSchema(authLoginBodySchema);
+  fastify.addSchema(authUserWithTokenSchema);
 
   await fastify.register(swaggerUI, {
     routePrefix: '/docs',
