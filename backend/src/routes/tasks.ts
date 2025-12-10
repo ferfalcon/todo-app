@@ -112,7 +112,7 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
   fastify.delete('/task/completed', deleteCompleteRouteOptions, async (request, reply) => {
     const userId = await ensureDemoUser();
 
-    const deleteCount = await tasksRepository.clearCompleteForUser(userId);
+    const deleteCount = await tasksRepository.clearCompletedForUser(userId);
 
     return { deleted: deleteCount }
   });

@@ -85,7 +85,7 @@ export const tasksRepository = {
     return result.count > 0;
   },
 
-  async clearCompleteForUser(userId: UserId): Promise<number> {
+  async clearCompletedForUser(userId: UserId): Promise<number> {
     const result = await prisma.task.deleteMany({
       where: {
         userId,
