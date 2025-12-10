@@ -60,7 +60,7 @@ Users should be able to:
 
 ### What I learned
 
-If you bootstrap your Fastify app with Fastify-CLI, you get this for free!.
+If you bootstrap your Fastify app with Fastify-CLI, you get this for free!
 Plugins and routes are autoloaded.
 
 ```ts
