@@ -77,6 +77,7 @@ export const listTasksRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Tasks'],
     summary: 'List all tasks for the current user',
+    security: [{ bearerAuth: [] }],
     querystring: {
       type: 'object',
       properties: {
@@ -97,6 +98,7 @@ export const createTaskRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Tasks'],
     summary: 'Create a new task for the current user',
+    security: [{ bearerAuth: [] }],
     body: { $ref: 'TaskCreateBody#' },
     response: {
       201: { $ref: 'Task#' },
@@ -106,10 +108,12 @@ export const createTaskRouteOptions: RouteShorthandOptions = {
   },
 };
 
+// Route options for PATCH /tasks/:taskId
 export const updateTaskRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Tasks'],
     summary: 'Update a task (rename and/or change status)',
+    security: [{ bearerAuth: [] }],
     params: {
       type: 'object',
       properties: {
@@ -131,10 +135,12 @@ export const updateTaskRouteOptions: RouteShorthandOptions = {
   },
 };
 
+// Route options for DELETE /tasks/:taskId
 export const deleteTaskRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Tasks'],
     summary: 'Delete a task',
+    security: [{ bearerAuth: [] }],
     params: {
       type: 'object',
       properties: {
@@ -158,10 +164,12 @@ export const deleteTaskRouteOptions: RouteShorthandOptions = {
   },
 };
 
+// Route options for DELETE /tasks/completed
 export const deleteCompleteRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Tasks'],
     summary: 'Delete all completed tasks for the current user',
+    security: [{ bearerAuth: [] }],
     response: {
       200: {
         description: 'Number of completed tasks that were deleted',
@@ -175,12 +183,13 @@ export const deleteCompleteRouteOptions: RouteShorthandOptions = {
   },
 };
 
+// Route options for POST /tasks/reorder
 export const reorderTasksRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Tasks'],
     summary: 'Reorder all tasks for the current user',
-    description:
-      'orderedIds must contain each of the current user’s task IDs exactly once.',
+    description: 'orderedIds must contain each of the current user’s task IDs exactly once.',
+    security: [{ bearerAuth: [] }],
     body: { $ref: 'TaskReorderBody#' },
     response: {
       200: { $ref: 'TaskListResponse#' },

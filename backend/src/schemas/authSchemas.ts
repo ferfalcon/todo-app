@@ -85,11 +85,7 @@ export const meRouteOptions: RouteShorthandOptions = {
   schema: {
     tags: ['Auth'],
     summary: 'Get the current authenticated user',
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
+    security: [{ bearerAuth: [] }],
     response: {
       200: { $ref: 'User#' },
       401: {

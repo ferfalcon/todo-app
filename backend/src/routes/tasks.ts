@@ -1,7 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
-import { prisma } from "../db/client";
 import { tasksRepository } from "../persistence/taskRepository";
-import type { UserId } from "../domain/models";
 import { 
   listTasksRouteOptions, 
   createTaskRouteOptions, 
@@ -12,23 +10,11 @@ import {
 } from '../schemas/taskSchemas';
 
 const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
-  async function ensureDemoUser(): Promise<UserId> {
-    const email = 'demo@example.com';
+  const requireAuth = fastify.authenticate as any;
 
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {},
-      create: {
-        email,
-        passwordHash: 'demo-hash',
-      },
-    });
-
-    return user.id as UserId;
-  };
-
-  fastify.get('/tasks', listTasksRouteOptions, async (request, reply) => {
-    const userId = await ensureDemoUser();
+  // GET /tasks → list all tasks for the authenticated user
+  fastify.get('/tasks', { ...listTasksRouteOptions, preHandler: requireAuth }, async (request, reply) => {
+    const { userId } = request.user as { userId: string; email: string};
 
     const { status } = request.query as {
       status?: 'all' | 'active' | 'completed';
@@ -41,8 +27,10 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
     return { items: tasks };
   });
 
-  fastify.post('/tasks', createTaskRouteOptions, async (request, reply) => {
-    const userId = await ensureDemoUser();
+  // POST /tasks → create a new task for the authenticated user
+  fastify.post('/tasks', { ...createTaskRouteOptions, preHandler: requireAuth }, async (request, reply) => {
+    const { userId } = request.user as { userId: string; email: string };
+  
     const body = request.body as { title?: string };
 
     if (!body?.title || body.title.trim() === '') {
@@ -59,8 +47,9 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
     return task;
   });
 
-  fastify.patch('/tasks/:taskId', updateTaskRouteOptions, async (request, reply) => {
-    const userId = await ensureDemoUser();
+  // PATCH /tasks/:taskId → update title and/or status
+  fastify.patch('/tasks/:taskId', { ...updateTaskRouteOptions, preHandler: requireAuth }, async (request, reply) => {
+    const { userId } = request.user as { userId: string; email: string };
 
     const { taskId } = request.params as { taskId: string };
 
@@ -95,8 +84,10 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
     return updated;
   });
 
-  fastify.delete('/task/:taskId', deleteTaskRouteOptions, async(request, reply) => {
-    const userId = await ensureDemoUser();
+  // DELETE /tasks/:taskId → remove a task
+  fastify.delete('/task/:taskId', { ...deleteTaskRouteOptions, preHandler: requireAuth }, async(request, reply) => {
+    const { userId } = request.user as { userId: string; email: string };
+
     const { taskId } = request.params as { taskId: string };
 
     const deleted = await tasksRepository.deleteForUser(userId, taskId);
@@ -109,16 +100,18 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
     reply.code(204).send();
   });
 
-  fastify.delete('/task/completed', deleteCompleteRouteOptions, async (request, reply) => {
-    const userId = await ensureDemoUser();
+  // DELETE /tasks/completed → delete all completed tasks for the authenticated user
+  fastify.delete('/task/completed',{ ...deleteCompleteRouteOptions, preHandler: requireAuth }, async (request, reply) => {
+    const { userId } = request.user as { userId: string; email: string };
 
     const deleteCount = await tasksRepository.clearCompletedForUser(userId);
 
     return { deleted: deleteCount }
   });
 
-  fastify.post('/task/reorder', reorderTasksRouteOptions, async (request, reply) => {
-    const userId = await ensureDemoUser();
+  // POST /tasks/reorder → update order of all tasks for the authenticated user
+  fastify.post('/task/reorder',{ ...reorderTasksRouteOptions, preHandler: requireAuth }, async (request, reply) => {
+    const { userId } = request.user as { userId: string; email: string };
 
     const { orderedIds } = request.body as { 
       orderedIds: string[];
