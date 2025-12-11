@@ -85,7 +85,7 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
   });
 
   // DELETE /tasks/:taskId → remove a task
-  fastify.delete('/task/:taskId', { ...deleteTaskRouteOptions, preHandler: requireAuth }, async(request, reply) => {
+  fastify.delete('/tasks/:taskId', { ...deleteTaskRouteOptions, preHandler: requireAuth }, async(request, reply) => {
     const { userId } = request.user as { userId: string; email: string };
 
     const { taskId } = request.params as { taskId: string };
@@ -101,7 +101,7 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
   });
 
   // DELETE /tasks/completed → delete all completed tasks for the authenticated user
-  fastify.delete('/task/completed',{ ...deleteCompleteRouteOptions, preHandler: requireAuth }, async (request, reply) => {
+  fastify.delete('/tasks/completed',{ ...deleteCompleteRouteOptions, preHandler: requireAuth }, async (request, reply) => {
     const { userId } = request.user as { userId: string; email: string };
 
     const deleteCount = await tasksRepository.clearCompletedForUser(userId);
@@ -110,7 +110,7 @@ const tasksRoutes: FastifyPluginAsync = async (fastify, opts) => {
   });
 
   // POST /tasks/reorder → update order of all tasks for the authenticated user
-  fastify.post('/task/reorder',{ ...reorderTasksRouteOptions, preHandler: requireAuth }, async (request, reply) => {
+  fastify.post('/tasks/reorder',{ ...reorderTasksRouteOptions, preHandler: requireAuth }, async (request, reply) => {
     const { userId } = request.user as { userId: string; email: string };
 
     const { orderedIds } = request.body as { 
