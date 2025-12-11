@@ -14,6 +14,11 @@ import {
 } from '../api/auth';
 import { ApiError } from '../api/client';
 import type { User } from '../types/user';
+import {
+  clearAuthToken,
+  getAuthToken,
+  setAuthToken,
+} from '../auth/tokenStorage';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -32,28 +37,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Load current user on initial mount: calls GET /me
+  // On mount: if we have a token, try to load the current user.
   useEffect(() => {
     let isMounted = true;
 
-    async function loadCurrentUser() {
+    async function loadCurrentUserWithToken() {
+      const token = getAuthToken();
+
+      // No token → definitely not logged in.
+      if (!token) {
+        if (isMounted) {
+          setUser(null);
+          setError(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
         const me = await getCurrentUser();
-        if (isMounted) {
-          setUser(me);
-          setError(null);
-        }
+        if (!isMounted) return;
+        setUser(me);
+        setError(null);
       } catch (err) {
         if (!isMounted) return;
 
-        if (err instanceof ApiError) {
-          // 401 means "not logged in" → not a user-facing error
-          if (err.status === 401) {
-            setUser(null);
-            setError(null);
-          } else {
-            setError(err.message);
-          }
+        if (err instanceof ApiError && err.status === 401) {
+          // Token invalid/expired → clear it out.
+          clearAuthToken();
+          setUser(null);
+          setError(null);
         } else {
           setError('Unable to load current user.');
         }
@@ -64,7 +77,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     }
 
-    void loadCurrentUser();
+    void loadCurrentUserWithToken();
 
     return () => {
       isMounted = false;
@@ -76,7 +89,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const createdUser = await signupApi(credentials);
+        const { user: createdUser, token } = await signupApi(credentials);
+        setAuthToken(token);
         setUser(createdUser);
       } catch (err) {
         handleAuthError(err);
@@ -93,7 +107,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const loggedInUser = await loginApi(credentials);
+        const { user: loggedInUser, token } = await loginApi(credentials);
+        setAuthToken(token);
         setUser(loggedInUser);
       } catch (err) {
         handleAuthError(err);
@@ -110,10 +125,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
     try {
       await logoutApi();
-      setUser(null);
     } catch (err) {
+      // Even if backend logout fails, clear token locally.
       handleAuthError(err);
     } finally {
+      clearAuthToken();
+      setUser(null);
       setIsLoading(false);
     }
   }, []);
@@ -121,11 +138,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
+    const token = getAuthToken();
+    if (!token) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const me = await getCurrentUser();
       setUser(me);
     } catch (err) {
       handleAuthError(err);
+      clearAuthToken();
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -143,8 +169,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 }

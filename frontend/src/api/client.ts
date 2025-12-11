@@ -1,4 +1,5 @@
 import { config } from '../config';
+import { getAuthToken } from '../auth/tokenStorage';
 
 export interface ApiErrorPayload {
   error?: string;
@@ -29,7 +30,7 @@ export interface ApiRequestOptions extends RequestInit {
 /**
  * Low-level helper to call our backend API.
  * - Prefixes URLs with config.apiBaseUrl
- * - Sends cookies/credentials (for session-based auth)
+ * - Attaches Authorization: Bearer <token> if available
  * - Parses JSON responses
  * - Throws ApiError for non-2xx status codes
  */
@@ -41,6 +42,7 @@ export async function apiFetch<TResponse>(
 
   const headers = new Headers(options.headers);
 
+  // Handle JSON body
   let body = options.body ?? undefined;
 
   if (options.json !== undefined) {
@@ -48,12 +50,17 @@ export async function apiFetch<TResponse>(
     body = JSON.stringify(options.json);
   }
 
+  // Attach auth token if we have one and caller didn't override
+  const token = getAuthToken();
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   const response = await fetch(url, {
     ...options,
     headers,
     body,
-    // Important for cookie-based auth across origins
-    credentials: 'include',
+    // no need for credentials: 'include' now
   });
 
   const rawText = await response.text();
@@ -79,6 +86,5 @@ export async function apiFetch<TResponse>(
     throw new ApiError(messageFromPayload, response.status, data);
   }
 
-  // At this point TypeScript can't know the shape; the caller provides TResponse.
   return data as TResponse;
 }
