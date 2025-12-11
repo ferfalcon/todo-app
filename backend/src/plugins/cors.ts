@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import fp from 'fastify-plugin';
 import cors from '@fastify/cors';
+import fp from 'fastify-plugin';
 
 const corsPlugin: FastifyPluginAsync = async (fastify) => {
   const DEFAULT_ORIGIN = 'http://localhost:5173';
@@ -14,6 +14,7 @@ const corsPlugin: FastifyPluginAsync = async (fastify) => {
   await fastify.register(cors, {
     origin: origins,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
   });
 };
 
