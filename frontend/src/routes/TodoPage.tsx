@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Task } from '../types/task';
-import { fetchAllTasks, createTask } from '../api/tasks';
+import {
+  fetchAllTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  clearCompletedTasks,
+} from '../api/tasks';
 import { ApiError } from '../api/client';
 
 type FilterValue = 'all' | 'active' | 'completed';
@@ -12,9 +18,32 @@ export function TodoPage() {
 
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+
+  // Track per-task operations (toggle/delete)
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
+
+  // Separate load errors from action errors
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [newTitle, setNewTitle] = useState('');
+
+  function markBusy(id: string) {
+    setBusyIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }
+
+  function unmarkBusy(id: string) {
+    setBusyIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }
 
   // Load tasks once when the page mounts
   useEffect(() => {
@@ -22,7 +51,7 @@ export function TodoPage() {
 
     async function loadTasks() {
       setIsLoadingTasks(true);
-      setError(null);
+      setLoadError(null);
 
       try {
         const allTasks = await fetchAllTasks();
@@ -32,9 +61,9 @@ export function TodoPage() {
         if (!isMounted) return;
 
         if (err instanceof ApiError) {
-          setError(err.message);
+          setLoadError(err.message);
         } else {
-          setError('Unable to load tasks.');
+          setLoadError('Unable to load tasks.');
         }
       } finally {
         if (isMounted) {
@@ -51,15 +80,10 @@ export function TodoPage() {
   }, []);
 
   const filteredTasks = useMemo(() => {
-    if (filter === 'all') {
-      return tasks;
-    }
+    if (filter === 'all') return tasks;
 
     return tasks.filter((task) => {
-      if (filter === 'active') {
-        return task.status === 'active';
-      }
-      // filter === 'completed'
+      if (filter === 'active') return task.status === 'active';
       return task.status === 'completed';
     });
   }, [tasks, filter]);
@@ -69,16 +93,19 @@ export function TodoPage() {
     [tasks],
   );
 
+  const hasCompleted = useMemo(
+    () => tasks.some((task) => task.status === 'completed'),
+    [tasks],
+  );
+
   async function handleCreateTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = newTitle.trim();
 
-    if (!trimmed) {
-      return;
-    }
+    if (!trimmed) return;
 
     setIsCreating(true);
-    setError(null);
+    setActionError(null);
 
     try {
       const created = await createTask({ title: trimmed });
@@ -86,12 +113,77 @@ export function TodoPage() {
       setNewTitle('');
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message);
+        setActionError(err.message);
       } else {
-        setError('Unable to create task.');
+        setActionError('Unable to create task.');
       }
     } finally {
       setIsCreating(false);
+    }
+  }
+
+  async function handleToggleTask(task: Task) {
+    if (busyIds.has(task.id)) return;
+
+    markBusy(task.id);
+    setActionError(null);
+
+    const nextStatus = task.status === 'active' ? 'completed' : 'active';
+
+    try {
+      const updated = await updateTask(task.id, { status: nextStatus });
+
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? updated : t)),
+      );
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setActionError(err.message);
+      } else {
+        setActionError('Unable to update task.');
+      }
+    } finally {
+      unmarkBusy(task.id);
+    }
+  }
+
+  async function handleDeleteTask(task: Task) {
+    if (busyIds.has(task.id)) return;
+
+    markBusy(task.id);
+    setActionError(null);
+
+    try {
+      await deleteTask(task.id);
+      setTasks((prev) => prev.filter((t) => t.id !== task.id));
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setActionError(err.message);
+      } else {
+        setActionError('Unable to delete task.');
+      }
+    } finally {
+      unmarkBusy(task.id);
+    }
+  }
+
+  async function handleClearCompleted() {
+    if (!hasCompleted || isClearing) return;
+
+    setIsClearing(true);
+    setActionError(null);
+
+    try {
+      await clearCompletedTasks();
+      setTasks((prev) => prev.filter((t) => t.status !== 'completed'));
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setActionError(err.message);
+      } else {
+        setActionError('Unable to clear completed tasks.');
+      }
+    } finally {
+      setIsClearing(false);
     }
   }
 
@@ -101,7 +193,6 @@ export function TodoPage() {
         <h1 className="todo-page__title">Todo</h1>
       </header>
 
-      {/* New task form */}
       <form
         className="todo-page__new-task-form"
         onSubmit={handleCreateTask}
@@ -124,17 +215,15 @@ export function TodoPage() {
         </button>
       </form>
 
-      {/* Error message */}
-      {error && (
-        <p className="todo-page__error">
-          {error}
-        </p>
+      {(loadError || actionError) && (
+        <p className="todo-page__error">{actionError ?? loadError}</p>
       )}
 
-      {/* Tasks list / loading / empty states */}
       <div className="todo-page__list-container">
         {isLoadingTasks ? (
           <p className="todo-page__loading">Loading tasks…</p>
+        ) : loadError ? (
+          <p className="todo-page__loading">Could not load tasks.</p>
         ) : filteredTasks.length === 0 ? (
           <p className="todo-page__empty">
             {tasks.length === 0
@@ -143,21 +232,51 @@ export function TodoPage() {
           </p>
         ) : (
           <ul className="todo-page__list">
-            {filteredTasks.map((task) => (
-              <li
-                key={task.id}
-                className={`todo-page__item todo-page__item--${task.status}`}
-              >
-                <span className="todo-page__item-title">
-                  {task.title}
-                </span>
-              </li>
-            ))}
+            {filteredTasks.map((task) => {
+              const isBusy = busyIds.has(task.id);
+              const isCompleted = task.status === 'completed';
+
+              return (
+                <li
+                  key={task.id}
+                  className={`todo-page__item todo-page__item--${task.status}`}
+                >
+                  <button
+                    type="button"
+                    className="todo-page__toggle"
+                    aria-label={
+                      isCompleted ? 'Mark as active' : 'Mark as completed'
+                    }
+                    onClick={() => handleToggleTask(task)}
+                    disabled={isBusy}
+                  >
+                    {isCompleted ? '✓' : ''}
+                  </button>
+
+                  <span
+                    className={`todo-page__item-title${
+                      isCompleted ? ' todo-page__item-title--completed' : ''
+                    }`}
+                  >
+                    {task.title}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="todo-page__delete"
+                    aria-label="Delete task"
+                    onClick={() => handleDeleteTask(task)}
+                    disabled={isBusy}
+                  >
+                    ×
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
 
-      {/* Footer: items left + filters (client-side only for now) */}
       <footer className="todo-page__footer">
         <span className="todo-page__items-left">
           {remainingCount} item{remainingCount === 1 ? '' : 's'} left
@@ -196,9 +315,10 @@ export function TodoPage() {
         <button
           type="button"
           className="todo-page__clear-completed"
-          disabled={tasks.every((task) => task.status !== 'completed')}
+          onClick={handleClearCompleted}
+          disabled={!hasCompleted || isClearing}
         >
-          Clear completed
+          {isClearing ? 'Clearing…' : 'Clear completed'}
         </button>
       </footer>
     </section>

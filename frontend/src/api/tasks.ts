@@ -65,8 +65,10 @@ export async function deleteTask(id: string): Promise<void> {
   });
 }
 
-export async function clearCompletedTasks(): Promise<void> {
-  await apiFetch<void>('/tasks/clear-completed', {
-    method: 'POST',
+export async function clearCompletedTasks(): Promise<number> {
+  const res = await apiFetch<{ deleted: number }>('/tasks/completed', {
+    method: 'DELETE',
   });
+
+  return res.deleted;
 }
