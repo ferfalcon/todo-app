@@ -72,3 +72,12 @@ export async function clearCompletedTasks(): Promise<number> {
 
   return res.deleted;
 }
+
+export async function reorderTasks(orderedIds: string[]): Promise<Task[]> {
+  const raw = await apiFetch<unknown>('/tasks/reorder', {
+    method: 'POST',
+    json: { orderedIds },
+  });
+
+  return toTasksArray(raw);
+}
