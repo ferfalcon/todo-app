@@ -8,7 +8,6 @@ import { AuthContext, type AuthContextValue } from './AuthContext';
 import {
   getCurrentUser,
   login as loginApi,
-  logout as logoutApi,
   signup as signupApi,
   type AuthCredentials,
 } from '../api/auth';
@@ -121,18 +120,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const logout = useCallback(async () => {
-    setIsLoading(true);
+    // No backend logout endpoint; just clear auth on the client.
+    clearAuthToken();
+    setUser(null);
     setError(null);
-    try {
-      await logoutApi();
-    } catch (err) {
-      // Even if backend logout fails, clear token locally.
-      handleAuthError(err);
-    } finally {
-      clearAuthToken();
-      setUser(null);
-      setIsLoading(false);
-    }
   }, []);
 
   const refresh = useCallback(async () => {

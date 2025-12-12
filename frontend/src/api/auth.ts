@@ -47,7 +47,6 @@ function toUser(raw: unknown): User {
 
   // Fallback: log for debugging
   // (helps if backend shape ever drifts)
-  // eslint-disable-next-line no-console
   console.error('Unexpected user payload from API:', raw);
   throw new Error('Unexpected user payload from API');
 }
@@ -97,13 +96,6 @@ export async function login(
     json: credentials,
   });
   return toAuthSuccess(raw);
-}
-
-export async function logout(): Promise<void> {
-  // You might still have a `/auth/logout` to invalidate tokens server-side.
-  await apiFetch<void>('/auth/logout', {
-    method: 'POST',
-  });
 }
 
 export async function getCurrentUser(): Promise<User> {
