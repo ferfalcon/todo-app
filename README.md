@@ -2,7 +2,7 @@
 
 ![Design preview for the Todo app coding challenge](preview.jpg)
 
-This is an extended solution to the [Todo app challenge on Frontend Mentor](https://www.frontendmentor.io/challenges/todo-app-Su1_KokOW).
+This is an extended solution to the [Todo app challenge on Frontend Mentor](https://www.frontendmentor.io/challenges/todo-app-Su1_KokOW). It includes built a todo task manager with user authentication. Implemented RESTful API design, database CRUD operations, and real-time updates across devices using WebSockets.
 
 ## Table of contents
 
@@ -29,12 +29,16 @@ Users should be able to:
 - Delete todos from the list
 - Filter by all/active/complete todos
 - Clear all completed todos
-- **Bonus**: Drag and drop to reorder items on the list
+- Toggle light and dark mode
+- View the optimal layout for the app depending on their device's screen size
+- See hover states for all interactive elements on the page
+- Drag and drop to reorder items on the list
 
 ### Links
 
-- Solution URL: [Add solution URL here](https://your-solution-url.com)
-- Live Site URL: [Add live site URL here](https://your-live-site-url.com)
+- Frontend Live Site URL: [https://todo-app-frontend-w1e2.onrender.com](https://todo-app-frontend-w1e2.onrender.com)
+- Backend Live Site URL: [https://todo-app-backend-ufzj.onrender.com](https://todo-app-backend-ufzj.onrender.com)
+- Repository: [https://github.com/ferfalcon/todo-app](https://github.com/ferfalcon/todo-app)
 
 ## My process
 
@@ -113,7 +117,3 @@ Use this section to outline areas that you want to continue focusing on in futur
 - LinkedIn - [Fernando Falcon](https://www.linkedin.com/in/fernandofalcon/)
 - Website - [ferfalcon.com](http://ferfalcon.com/)
 - Frontend Mentor - [@ferfalcon](https://www.frontendmentor.io/profile/ferfalcon/)
-
-## Acknowledgments
-
-This is where you can give a hat tip to anyone who helped you out on this project. Perhaps you worked in a team or got some inspiration from someone else's solution. This is the perfect place to give them some credit.
